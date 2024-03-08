@@ -1,0 +1,81 @@
+###
+GET {{baseUrl}}/
+
+###
+POST {{baseUrl}}/
+
+###
+GET {{baseUrl}}/ping
+
+###
+GET {{baseUrl}}/kingkong/king
+
+###
+GET {{baseUrl}}/greet/rainer
+
+###
+GET {{baseUrl}}/greet?salutation=Hi&name=rainer
+
+###
+GET {{baseUrl}}/greet?salutation=Hi
+
+###
+GET {{baseUrl}}/greet?name=rainer
+
+###
+GET {{baseUrl}}/greet
+
+###
+POST {{baseUrl}}/greet
+Content-Type: application/json
+
+{
+    "salutation": "Hi",
+    "name": "rainer"
+}
+
+###
+GET {{baseUrl}}/lookup/8
+
+###
+GET {{baseUrl}}/random
+
+###
+GET {{baseUrl}}/numbers
+
+###
+POST {{baseUrl}}/numbers
+Content-Type: application/json
+
+###
+GET {{baseUrl}}/poem
+
+###
+GET {{baseUrl}}/healthcheck
+
+### List
+GET {{baseUrl}}/api/notes
+
+### Create
+POST {{baseUrl}}/api/notes
+content-type: application/json
+
+{
+    "title": "a note1",
+    "content": "here some reminder, mention @raditzlawliet",
+    "is_published": true
+}
+
+### Read
+GET {{baseUrl}}/api/notes/4ef6f67a-b0de-4a3a-8e9a-e1ce11cb3e3a
+
+### Update
+PATCH {{baseUrl}}/api/notes/4ef6f67a-b0de-4a3a-8e9a-e1ce11cb3e3a
+content-type: application/json
+
+{
+    "content": "here some reminder, mention @raditzlawliet share and like"
+}
+
+### Delete
+DELETE {{baseUrl}}/api/notes/4ef6f67a-b0de-4a3a-8e9a-e1ce11cb3e3a
