@@ -1,7 +1,6 @@
-mod handler;
-mod model;
-mod route;
-mod schema;
+mod handlers;
+mod models;
+mod routes;
 
 use std::sync::Arc;
 
@@ -24,7 +23,7 @@ use dotenv::dotenv;
 // use crate::{
 //     handler::{create_note_handler, delete_note_handler, edit_note_handler, get_note_handler, health_check_handler, note_list_handler},
 // }
-use route::create_router;
+use routes::route::create_router;
 
 #[derive(Default, Clone)]
 struct AppState2 {

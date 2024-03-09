@@ -9,8 +9,8 @@ use axum::{
 use serde_json::json;
 
 use crate::{
-    model::{NoteModel, NoteModelResponse},
-    schema::{CreateNoteSchema, FilterOptions, UpdateNoteSchema},
+    models::model::{NoteModel, NoteModelResponse},
+    models::schema::{CreateNoteSchema, FilterOptions, UpdateNoteSchema},
     AppState,
 };
 

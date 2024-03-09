@@ -47,6 +47,8 @@ GET {{baseUrl}}/numbers
 POST {{baseUrl}}/numbers
 Content-Type: application/json
 
+3
+
 ###
 GET {{baseUrl}}/poem
 
@@ -61,16 +63,16 @@ POST {{baseUrl}}/api/notes
 content-type: application/json
 
 {
-    "title": "a note1",
+    "title": "a note2",
     "content": "here some reminder, mention @raditzlawliet",
     "is_published": true
 }
 
 ### Read
-GET {{baseUrl}}/api/notes/4ef6f67a-b0de-4a3a-8e9a-e1ce11cb3e3a
+GET {{baseUrl}}/api/notes/40ae2b06-b26b-4c0a-96fe-6a933fe48563
 
 ### Update
-PATCH {{baseUrl}}/api/notes/4ef6f67a-b0de-4a3a-8e9a-e1ce11cb3e3a
+PATCH {{baseUrl}}/api/notes/40ae2b06-b26b-4c0a-96fe-6a933fe48563
 content-type: application/json
 
 {

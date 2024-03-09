@@ -6,7 +6,7 @@ use axum::{
 };
 
 use crate::{
-    handler::{
+    handlers::handler::{
         create_note_handler, delete_note_handler, edit_note_handler, get_note_handler,
         note_list_handler,
     },
