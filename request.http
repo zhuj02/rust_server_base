@@ -58,6 +58,14 @@ GET {{baseUrl}}/healthcheck
 ### List
 GET {{baseUrl}}/api/notes
 
+### List
+POST {{baseUrl}}/api/notes2
+content-type: application/json
+
+{
+    "id_array": ["40ae2b06-b26b-4c0a-96fe-6a933fe48563", "5aab2d64-0131-4cee-ae65-65294b125f76"]
+}
+
 ### Create
 POST {{baseUrl}}/api/notes
 content-type: application/json
@@ -81,3 +89,6 @@ content-type: application/json
 
 ### Delete
 DELETE {{baseUrl}}/api/notes/4ef6f67a-b0de-4a3a-8e9a-e1ce11cb3e3a
+
+### template
+GET {{baseUrl}}/api/www

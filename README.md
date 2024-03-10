@@ -1,5 +1,5 @@
 # rust web server
-A blank web server with rust language. Support mysql, redis, restful api.
+A blank rust web server with some examples. Support mysql, redis, restful api.
 
 ## Introduction
 

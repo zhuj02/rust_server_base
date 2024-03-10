@@ -6,13 +6,17 @@ use axum::{
     response::IntoResponse,
     Json,
 };
+use serde::Serialize;
 use serde_json::json;
+use sqlx::query;
 
 use crate::{
     models::model::{NoteModel, NoteModelResponse},
-    models::schema::{CreateNoteSchema, FilterOptions, UpdateNoteSchema},
+    models::schema::{CreateNoteSchema, FilterOptions, UpdateNoteSchema, Ids},
     AppState,
 };
+
+use axum_template::{Key, RenderHtml};
 
 pub async fn note_list_handler(
     opts: Option<Query<FilterOptions>>,
@@ -284,4 +288,63 @@ fn to_note_response(note: &NoteModel) -> NoteModelResponse {
         created_at: note.created_at.unwrap(),
         updated_at: note.updated_at.unwrap(),
     }
+}
+
+pub async fn get_name(
+    State(data): State<Arc<AppState>>,
+    Key(key): Key,
+    Path(name): Path<String>,
+) -> impl IntoResponse {
+    let engine = data.view_engine.clone();
+    let person = Person { name };
+
+    RenderHtml(key, engine, person)
+}
+
+#[derive(Debug, Serialize)]
+pub struct Person {
+    name: String,
+}
+
+
+pub async fn get_notes_handler(
+    State(data): State<Arc<AppState>>,
+    Json(body): Json<Ids>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let ids = body.id_array.unwrap();
+    let mut query_builder = sqlx::QueryBuilder::new(
+        "SELECT * FROM notes WHERE id IN ("
+    );
+
+    query_builder.push_tuples(ids, |mut b, id|{
+        b.push_bind(id);
+    });
+    query_builder.push(")");
+    
+
+    // Query with macro
+    let notes = query_builder.build_query_as()
+        .fetch_all(&data.db)
+        .await
+        .map_err(|e| {
+            let error_response = serde_json::json!({
+                "status": "error",
+                "message": format!("Database error: { }", e),
+            });
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
+        })?;
+
+    // Response
+    let note_responses = notes
+        .iter()
+        .map(|note| to_note_response(&note))
+        .collect::<Vec<NoteModelResponse>>();
+
+    let json_response = serde_json::json!({
+        "status": "ok",
+        "count": note_responses.len(),
+        "notes": note_responses
+    });
+
+    Ok(Json(json_response))
 }

@@ -29,3 +29,10 @@ pub struct UpdateNoteSchema {
     pub content: Option<String>,
     pub is_published: Option<bool>,
 }
+
+// Update
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Ids {
+    pub id_array: Option<Vec<String>>,
+}
+

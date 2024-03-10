@@ -2,46 +2,75 @@ mod handlers;
 mod models;
 mod routes;
 
+// A thread-safe reference-counting pointer. ‘Arc’ stands for ‘Atomically Reference Counted’.
 use std::sync::Arc;
 
+use handlebars::Handlebars;
+
+use redis;
+// The web framework we are using. It provides a lot of utilities for building web applications.
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::{Html, IntoResponse, Response},
-    routing::get,
+    routing::get, Extension,
     Json, Router,
 };
+
+use axum_template::engine::Engine;
+// For generate random number.
 use rand::Rng;
+
+// For serialization and deserialization of data. Most popular Rust library for this.
 use serde::{Deserialize, Serialize};
+
+// For error handling. This library provides a convenient derive macro for the standard library’s std::error::Error trait.
 use thiserror::Error;
+
+// An event-driven, non-blocking I/O platform for writing asynchronous applications.
 use tokio::{fs::File, io::AsyncReadExt, sync::RwLock};
 
+// For working with MySQL database. sqlx support other types of databases as well.
 use sqlx::mysql::{MySqlPool, MySqlPoolOptions};
-use dotenv::dotenv;
-//use std::env;
 
-// use crate::{
-//     handler::{create_note_handler, delete_note_handler, edit_note_handler, get_note_handler, health_check_handler, note_list_handler},
-// }
+// For loading environment variables from a .env file.
+use dotenv::dotenv;
+
 use routes::route::create_router;
+
+// Type alias for our engine. For this example, we are using Handlebars
+type AppEngine = Engine<Handlebars<'static>>;
+
+#[derive(Debug, Serialize)]
+pub struct Person {
+    name: String,
+}
 
 #[derive(Default, Clone)]
 struct AppState2 {
     numbers: Vec<i32>,
 }
 
+#[derive(Clone, Debug)]
 struct AppState {
     db: MySqlPool,
+    view_engine: AppEngine,
 }
 
-// Note that you can use trait objects for shared state, too. This is useful
-// for e.g. mock objects in unit tests. Sample for trait object state:
+// Example to keep states of the app. We can use trait objects for shared state
+// Sample for trait object state:
 // https://github.com/tokio-rs/axum/blob/8854e660e9ab07404e5bb8e30b92311d3848de05/examples/error-handling-and-dependency-injection/src/main.rs#L124
 type AppStateType = Arc<RwLock<AppState2>>;
 
 #[tokio::main]
 async fn main() {
+    // Load environment variables from .env file.
     dotenv().ok();
+    // Set up the Handlebars engine with the same route paths as the Axum router
+    let mut hbs = Handlebars::new();
+    hbs.register_template_string("/api/:name", "<h1>Hello HandleBars!</h1><p>{{name}}</p>")
+        .unwrap();
+    
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must set");
     let pool = match MySqlPoolOptions::new()
         .max_connections(10)
@@ -56,8 +85,11 @@ async fn main() {
             std::process::exit(1);
         }
     };
-
-    let pool = Arc::new(AppState{db: pool});
+    let pool = Arc::new(AppState { db: pool, view_engine: Engine::from(hbs) });
+    
+    // Set up the Redis client
+    let redis_url = std::env::var("REDIS_URL").expect("DATABASE_URL must set");
+    let rdc = redis::Client::open(redis_url).unwrap();
     let app = Router::new()
         .route("/", get(hello_world).post(post_hello_world))
         .route("/healthcheck", get(health_check))
@@ -72,16 +104,9 @@ async fn main() {
         // routing hierarchies using methods like merge and nest.
         .merge(pingpong())
         .nest("/kingkong", kingkong())
-        .merge(poem()
-        .merge(create_router(pool))
-        // .route("/api/notes", post(create_note_handler).get(note_list_handler))
-        // .route(
-        //     "/api/notes/:id",
-        //     get(get_note_handler)
-        //         .patch(edit_note_handler)
-        //         .delete(delete_note_handler),
-        // )
-    );
+        //.route("/:name", get(get_name))
+        .merge(poem().merge(create_router(pool)))
+        .layer(Extension(rdc));
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
@@ -268,7 +293,10 @@ fn poem() -> Router {
     Router::new().route("/poem", get(get_poem))
 }
 
-async fn health_check() -> impl IntoResponse {
+async fn health_check(Extension(rdc): Extension<redis::Client>) -> impl IntoResponse {
+    let mut redis_conn = rdc.get_connection().expect("failed to connect to Redis");
+    let _: () = redis::cmd("SET").arg("healthcheck").arg("OK").query(&mut redis_conn).expect("failed to execute SET for 'foo'");
+    
     const MESSAGE: &str = "API Services";
     let json_response = serde_json::json!({
         "status": "ok2",
